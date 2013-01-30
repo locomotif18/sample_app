@@ -46,7 +46,7 @@ class UsersController < ApplicationController
   end
 
   def destroy
-    unless current_user.admin?
+    if User.find(params[:id]).admin == false
       User.find(params[:id]).destroy
       flash[:success] = "User destroyed."
       redirect_to users_url
