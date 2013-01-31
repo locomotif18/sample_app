@@ -6,9 +6,13 @@ class UsersController < ApplicationController
 
   def show
     @user = User.find(params[:id])
+    @microposts = @user.microposts.paginate(page: params[:page])
   end
 
   def new
+    # 'unless' condition used for Exercise 9.6.6 to prevent signed-in users
+    # from accessing the the signup (new) page
+    # result: redirect to home page
     unless signed_in?
       @user = User.new
     else
@@ -17,13 +21,20 @@ class UsersController < ApplicationController
   end
   
   def create
-    @user = User.new(params[:user])
-    if @user.save
-      sign_in @user
-      flash[:success] = "Welcome to the Sample App!"
-      redirect_to @user
+    # 'unless' condition used for Exercise 9.6.6 to prevent signed-in users
+    # from accessing the the signup (new) page
+    # result: redirect to home page
+    unless signed_in?
+      @user = User.new(params[:user])
+      if @user.save
+        sign_in @user
+        flash[:success] = "Welcome to the Sample App!"
+        redirect_to @user
+      else
+        render 'new'
+      end
     else
-      render 'new'
+      redirect_to(root_path)
     end
   end
   
@@ -57,21 +68,14 @@ class UsersController < ApplicationController
 
 
   private
-  
-  def signed_in_user
-    unless signed_in?
-      store_location
-      redirect_to signin_path, notice: "Please sign in."
+
+    def correct_user
+      @user = User.find(params[:id])
+      redirect_to(root_path) unless current_user?(@user)
     end
-  end
 
-  def correct_user
-    @user = User.find(params[:id])
-    redirect_to(root_path) unless current_user?(@user)
-  end
-
-  def admin_user
-    redirect_to(root_path) unless current_user.admin?
-  end
+    def admin_user
+      redirect_to(root_path) unless current_user.admin?
+    end
 
 end
